@@ -1,0 +1,51 @@
+---
+- hosts: all        #If you maintain inventory file specific the group.
+  become: yes
+  become_user: <paste weblogic admin username>
+  become_method: sudo
+
+  vars:
+    DOMAIN_HOME:
+      DOMAIN_HOME: <add the weblogic path i.e DOMAIN HOME> #path need to be changed.
+  
+# Verify amd register the running weblogic  
+  tasks:
+  - name: check if there are running WebLogic processes
+#    command:  "Dweblogic"
+    command: pgrep -f "Dweblogic"
+    register: ps_pre
+    changed_when: ps_pre.rc 
+    failed_when: ( ps_pre.rc not in [ 0, 1 ] )
+    check_mode: no
+
+#Print the running process ID 
+  - name: print running WebLogic processes
+    debug:
+      var: ps_pre.stdout_lines 
+
+#Based on register value if it is 0 then weblogic is running continue with shutdown 
+  - name: Stop WebLogic
+    shell: 
+      cmd: $DOMAIN_HOME/bin/stopWebLogic.sh
+    environment: "{{ DOMAIN_HOME }}"  
+    when:  ps_pre.rc == 0
+
+  - name: Stop WebLogic Node Manager
+    shell: 
+      cmd: $DOMAIN_HOME/bin/stopNodeManager.sh
+    environment: "{{ DOMAIN_HOME }}"  
+    when:  ps_pre.rc == 0
+
+#Based on register value if it is 1 then weblogic services are stopped continue with starting the services
+
+  - name: start WebLogic
+    shell:
+      cmd: $DOMAIN_HOME/bin/startNodeManager.sh
+    environment: "{{ DOMAIN_HOME }}"   
+    when: ps_pre.rc == 1     
+
+  - name: start Weblogic
+    shell:
+      cmd: $DOMAIN_HOME/bin/startWebLogic.sh
+    environment: "{{ DOMAIN_HOME }}"   
+    when: ps_pre.rc == 1  

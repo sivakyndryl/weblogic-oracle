@@ -1,0 +1,14 @@
+---
+- hosts: msccbadvd3
+  become: yes
+  become_user: oracle
+  become_method: sudo
+
+  tasks:
+  - name: Oracle Database | Startup database
+    sh: |
+      echo " {{ env_db }} " | . oraenv
+      echo "startup" | sqlplus "/ as sysdba"
+    args:
+      executable: /bin/ksh
+  

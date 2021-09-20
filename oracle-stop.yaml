@@ -1,0 +1,14 @@
+---
+- hosts: msccbadvd3
+  become: yes
+  become_user: oracle
+  become_method: sudo
+
+  tasks:
+  
+  - name: Oracle Database | Shutdown database
+    sh: |
+     echo " {{ env_db }} " | . oraenv
+     echo "shutdown immediate" | sqlplus "/ as sysdba"
+    args:
+     executable: /bin/ksh
